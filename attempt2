@@ -1,5 +1,5 @@
 # Bhamini Brandon and Alex
-# 427 - Group Model
+# 427 - Group Model - Siegel
 # Climate Change, Economic Inequality, and Health Outcomes
 
 import math
@@ -34,6 +34,7 @@ def addInitialNodes(): 		#Initialize Population
         else: 
             mov = 3 # people who dont want to move
         regionAndClimate = # assign 1/4 to urban/hot, urban/cold, rural/hot, rural/cold (this probably has to be a list [region, climate]) # urbanhot = 0, urbancold =1, ruralhot=2, ruralcold = 3
+        #have to divide population into four environments first and then each environment must maintain normal distrib of susc and mob above
         #create node with those properties
         node = [personcounter, susc, mob, mov, regionAndClimate]
         #add to lists
@@ -41,7 +42,9 @@ def addInitialNodes(): 		#Initialize Population
     ogAgentList=agentList
     return [[agentList,suscList,movedList, ogAgentList]],[moveper, suscper]
 
-def modifySusceptibility(tempchange, agentList): #limit temp change 0-5 degrees in input file?
+#how do i read in file or can i just assign values for the mean and stdev in main code
+
+def modifySusceptibilityBeforeMoveDecision(tempchange, agentList): #limit temp change 0-5 degrees in input file?
     for x in agentList:
         if x[4] == 0:
             x[1] = x[1]*(tempchange/4)
@@ -51,7 +54,7 @@ def modifySusceptibility(tempchange, agentList): #limit temp change 0-5 degrees 
             x[1] = x[1]*(tempchange/8)
         elif x[4] == 3:
             x[1] = x[1]*(tempchange/6)
-    return agentList
+    return agentList  
 
 def moveOrNotMoveAndEffects(agentList, suscList, movedList, othersList, tempchange):
     for x in agentList:
@@ -68,7 +71,8 @@ def moveOrNotMoveAndEffects(agentList, suscList, movedList, othersList, tempchan
             if x[4]==1:
                 x[4]== 0
                 x[1] = x[1]*(tempchange/2)
-          # nothing happens here bc youre already in best outcome and you dont move  if x[4] == 2: 
+          # nothing happens here bc youre already in best outcome and you dont move and your health only gets slightly worse i
+            # if x[4] == 2: 
                 # x[4]== 2
                 # x[1] = x[1]*(tempchange/)
             if x[4]==3: 
@@ -85,9 +89,3 @@ def moveOrNotMoveAndEffects(agentList, suscList, movedList, othersList, tempchan
 [agentList,suscList,movedList, ogAgentList]],[moveper, suscper] = addInitialNodes()
 agentlist = modify(____)
 [____] = moveOrNotMoveAndEffects
-
-
-
-
-
-
