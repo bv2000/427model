@@ -4,67 +4,218 @@
 
 import math
 import numpy as np
+from scipy.stats import skewnorm
 from os.path import exists
 
-def addInitialNodes(): 		#Initialize Population
+def addInitialNodes(multiplier,suscmean,suscstdev, N=12000): 		#Initialize Population
 
 	#lists of agents
-    agentList = list()		#List of all people
-    suscList = list()		#List of everyone's suscepbilities 
-    movedList = list()		#List of people who do move (susc = high, mob = high)
-    othersList = list()     #Everyone else
-
-
-    #initialize internal variables for each run
-    moveper=0    			#percent of population with mob=0.7 -- people who can move
-    suscper=0     	        #percent of population who are high susc (0.5)
+    agentList = list()      #List of all people
+    mov1List = list()   	#List of people who should move/can move/want to move; outcome: move
+    mov2List = list()		#List of people wo should move/can't move; outcome: don't move
+    mov3List = list()       #List of people who should move/can move/don't want move; outcome: don't move
+    mov4List = list()       #List of people who can move and have weirdly high pref to move; outcome: move
+    mov5List = list()       #List of people who dont need to move (susc is low); outcome: don't move
+    # combine to make other relevant lists 
+    # highsusc =  mov1+mov2
+    # movedlist = mov1, mov4
+    # staylist = mov2, mov3, mov5
+    # maybe a separate list of mobility? but not sure what that would even be useful for
     
 	#Create list of individuals
     personcounter=0 		#counter for setting personNum
     #Create lists
     while personcounter<N:
         #Set node properties
-        #A node is a list of properties: personcounter, susc, mob, mov, regionAndClimate
-        susc=np.random.normal(loc=suscmean, scale=suscstdev) #set susc
-        mob = np.random.normal (loc=mobmean, scale=mobstdev) 	#set mob
-        if susc>0.8 and mob>0.7: 
-            mov=1 #decision is if susc high and mob high, then move 
+        #A node is a list of properties: personcounter, susc, mob, mov, regionAndClimate, prefmove, finalloc
+        finalloc=0 #where each person ends up (can be same as original location)
+        if personcounter<N/4:
+            regionAndClimate =0 #urbanhot
+            skewness = 5 #Negative values are left skewed, positive values are right skewed.
+        elif personcounter<N/2:
+            regionAndClimate = 1 #urbancold
+            skewness = 5
+        elif personcounter<3*N/4:
+            regionAndClimate = 2 #ruralhot
+            skewness = 2
+        else:
+            regionAndClimate = 3 #ruralcold
+            skewness = 2
+        skewness = skewness * multiplier 
+        susc=np.random.normal(loc=suscmean, scale=suscstdev) #set susc of person, mean = 0.5, stdev = 0.15
+        numValues = N/4
+        random = skewnorm.rvs(a = skewness,loc=1, size=numValues)  #Skewnorm function
+
+        random = random - min(random)      #Shift the set so the minimum value is equal to zero.
+        random = random / max(random)      #Standadize all the vlues between 0 and 1. 
+        mob = random[0]
+
+        prefmove = np.random.normal(loc=0.5, scale=0.2) #assigns individuals preference to move
+        node = [personcounter, susc, mob, mov, regionAndClimate, prefmove, finalloc]
+        if susc>0.8 and mob>0.7 and prefmove>0.5:
+            mov=1 #should move/can move/want to move = you move
+            mov1List.append(node)
         elif susc>0.8  and  mob<=0.7:
-            mov = 2 # people who want to move but poor
+            mov = 2 #should move/can't move = you don't move
+            mov2List.append(node)
+        elif susc>0.8 and mob>0.7 and prefmove<=0.5:
+            mov = 3 #should move/can move/don't want move = you don't move
+            mov3List.append(node)
+        elif mob>0.7 and prefmove>0.9: #is there an automatic assumption here that susc is low
+            mov = 4 #can move and have weirdly high pref to move = you mov
+            mov4List.append(node)
         else: 
-            mov = 3 # people who dont want to move
-        regionAndClimate = # assign 1/4 to urban/hot, urban/cold, rural/hot, rural/cold (this probably has to be a list [region, climate]) # urbanhot = 0, urbancold =1, ruralhot=2, ruralcold = 3
-        #have to divide population into four environments first and then each environment must maintain normal distrib of susc and mob above
-        #create node with those properties
-        node = [personcounter, susc, mob, mov, regionAndClimate]
+            mov = 5 #dont need to move (susc is low) = don't move
+            mov5List.append(node)
         #add to lists
         agentList.append(node)
     ogAgentList=agentList
-    return [[agentList,suscList,movedList, ogAgentList]],[moveper, suscper]
+    return [[agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList]]
 
-#how do i read in file or can i just assign values for the mean and stdev in main code
-
-def modifySusceptibilityBeforeMoveDecision(tempchange, agentList): #limit temp change 0-5 degrees in input file?
+def modifySusceptibilityBeforeMoveDecision(tempchange, agentList): #limit temp change 0-1 degrees in input file?
     for x in agentList:
-        if x[4] == 0:
-            x[1] = x[1]*(tempchange/4)
-        elif x[4] == 1:
-            x[1] = x[1]*(tempchange/2)
-        elif x[4] == 2:
-            x[1] = x[1]*(tempchange/8)
-        elif x[4] == 3:
-            x[1] = x[1]*(tempchange/6)
+        regionAndClimate = x[4]
+        if regionAndClimate == 0:
+            x[1] = x[1]*(1+(tempchange/6))
+        elif regionAndClimate == 1:
+            x[1] = x[1]*(1+(tempchange/4))
+        elif regionAndClimate == 2:
+            x[1] = x[1]*(1+(tempchange/14))
+        elif regionAndClimate == 3:
+            x[1] = x[1]*(1+(tempchange/12))
     return agentList  
 
 def moveOrNotMoveAndEffects(agentList, suscList, movedList, othersList, tempchange):
     for x in agentList:
-        if x[1]>0.8 and x[2]>0.7:
-            mov=1 
-        elif x[1]>0.8  and x[2]<=0.7:
-            mov = 2 
+        mov = x[3]
+        regionAndClimate = x[4]
+        susc = x[1]
+        mob = x[2]
+        prefmove = x[5]
+        if susc>0.8 and mob>0.7 and prefmove>0.5:
+            mov=1 #should move/can move/want to move = you move
+        elif susc>0.8  and  mob<=0.7:
+            mov = 2 #should move/can't move = you don't move
+        elif susc>0.8 and mob>0.7 and prefmove<=0.5:
+            mov = 3 #should move/can move/don't want move = you don't move
+        elif mob>0.7 and prefmove>0.9: 
+            mov = 4 #can move and have weirdly high pref to move = you mov
         else: 
-            mov = 3 
+            mov = 5 #dont need to move (susc is low) = don't move
+        if mov==1 and regionAndClimate==0: #should move/can move/want to move = you move
+            #assign everyone here a random number between 0 and 1 
+            #better regions for urban hot - rural hot, rural cold
+            #if number is below 0 and 0.4 - rural hot
+            #between 0.4 and 0.8 - rural cold
+            # 0.8 - 1 - urban cold
+            # randomlist = random.sample(range(10, 30), 5)
+            #finalloc set as 1,2,3
+        if mov==1 and regionAndClimate==1: 
+            #assign everyone here a random number between 0 and 1 
+            #better regions - urban hot, rural cold, rural hot
+            #if number is below 0.4 - urban hot,
+            # if num betweenn 0.4 and 0.7 - rural cold
+            # if num between 0.7 and 1 - rural hot
+            #finalloc set as  0,1,2
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==1 and regionAndClimate==2:
+            ##assign everyone here a random number between 0 and 1 
+            #better regions - none
+            #if number is between 0 and 0.5 - ruralcold
+            #if num between  0.5 and 0.75 - urban hot
+            # if num bw 0.75 and 1  - urban cold
+            #finalloc set as  0,1,3
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==1 and regionAndClimate==3: 
+             ##assign everyone here a random number between 0 and 1 
+            #better regions - none
+            #if number is between 0 and 0.5 - ruralcold
+            #if num between  0.5 and 0.75 - urban hot
+            # if num bw 0.75 and 1  - urban cold
+            #finalloc set as  0,1,3
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==2 and regionAndClimate==0: #should move/can't move = you don't move
+            #finalloc = urban hot
+        if mov==2 and regionAndClimate==1: 
+            #finalloc = urbancold
+        if mov==2 and regionAndClimate==2:
+            #finalloc = rural hot
+        if mov==2 and regionAndClimate==3: 
+            #finalloc = rural cold
+        if mov==3 and regionAndClimate==0: #should move/can move/don't want move = you don't move
+            #finalloc = urbanhot
+        if mov==3 and regionAndClimate==1: 
+            #finalloc = urban cold
+        if mov==3 and regionAndClimate==2:
+            # finalloc = rural hot
+        if mov==3 and regionAndClimate==3: 
+            #finalloc = ruralcold
+        if mov==4 and regionAndClimate==0: #can move and have weirdly high pref to move despite low susc = you mov
+            #assign everyone here a random number between 0 and 1 
+            #split into thirds and 
+            #if number is below 0.8 - rural hot and rural cold
+            # 0.8 - 1 - urban cold
+            # randomlist = random.sample(range(10, 30), 5)
+            #finalloc set as 1,2,3
+        if mov==4 and regionAndClimate==1: 
+            #assign everyone here a random number between 0 and 1 
+            #better regions - urban hot, rural cold, rural hot
+            #if number is below 0.4 - urban hot,
+            # if num betweenn 0.4 and 0.7 - rural cold
+            # if num between 0.7 and 1 - rural hot
+            #finalloc set as  0,1,2
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==4 and regionAndClimate==2:
+            ##assign everyone here a random number between 0 and 1 
+            #better regions - none
+            #if number is between 0 and 0.5 - ruralcold
+            #if num between  0.5 and 0.75 - urban hot
+            # if num bw 0.75 and 1  - urban cold
+            #finalloc set as  0,1,3
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==4 and regionAndClimate==3: 
+             ##assign everyone here a random number between 0 and 1 
+            #better regions - none
+            #if number is between 0 and 0.5 - ruralcold
+            #if num between  0.5 and 0.75 - urban hot
+            # if num bw 0.75 and 1  - urban cold
+            #finalloc set as  0,1,3
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==5 and regionAndClimate==0: #dont need to move (susc is low) = don't move
+            #assign everyone here a random number between 0 and 1 
+            #better regions for urban hot - rural hot, rural cold
+            #if number is below 0.8 - rural hot and rural cold
+            # 0.8 - 1 - urban cold
+            # randomlist = random.sample(range(10, 30), 5)
+            #finalloc set as 1,2,3
+        if mov==5 and regionAndClimate==1: 
+            #assign everyone here a random number between 0 and 1 
+            #better regions - urban hot, rural cold, rural hot
+            #if number is below 0.4 - urban hot,
+            # if num betweenn 0.4 and 0.7 - rural cold
+            # if num between 0.7 and 1 - rural hot
+            #finalloc set as  0,1,2
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==5 and regionAndClimate==2:
+            ##assign everyone here a random number between 0 and 1 
+            #better regions - none
+            #if number is between 0 and 0.5 - ruralcold
+            #if num between  0.5 and 0.75 - urban hot
+            # if num bw 0.75 and 1  - urban cold
+            #finalloc set as  0,1,3
+            # randomlist = random.sample(range(10, 30), 5)
+        if mov==5 and regionAndClimate==3: 
+             ##assign everyone here a random number between 0 and 1 
+            #better regions - none
+            #if number is between 0 and 0.5 - ruralcold
+            #if num between  0.5 and 0.75 - urban hot
+            # if num bw 0.75 and 1  - urban cold
+            #finalloc set as  0,1,3
+            # randomlist = random.sample(range(10, 30), 5)
+
+
         if mov==1: 
+
             if x[4]== 0:
                 x[4]== 2
                 x[1] = x[1]*(tempchange/4)
@@ -83,9 +234,11 @@ def moveOrNotMoveAndEffects(agentList, suscList, movedList, othersList, tempchan
             suscList.append(x) 
         if mov==3: 
             othersList.append(x)
-
+        #return something pls
 
 ## dont know how to do main code
-[agentList,suscList,movedList, ogAgentList]],[moveper, suscper] = addInitialNodes()
+[agentList,suscList,movedList, ogAgentList] = addInitialNodes()
 agentlist = modify(____)
 [____] = moveOrNotMoveAndEffects
+
+#3 different times 
