@@ -3,6 +3,7 @@
 # Climate Change, Economic Inequality, and Health Outcomes
 
 import math
+import random
 import numpy as np
 from scipy.stats import skewnorm
 from os.path import exists
@@ -27,8 +28,9 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N=12000): 		#Initialize Popul
     #Create lists
     while personcounter<N:
         #Set node properties
-        #A node is a list of properties: personcounter, susc, mob, mov, regionAndClimate, prefmove, finalloc
-        finalloc=0 #where each person ends up (can be same as original location)
+        #A node is a list of properties: personcounter, susc, mob, mov, regionAndClimate, prefmove, finloc, newlocdeterminant
+        finloc=0 #where each person ends up (can be same as original location)
+        newlocdeterminant=0 #random number that determines where person who moves ends up; irrelevant for those who don't move
         if personcounter<N/4:
             regionAndClimate =0 #urbanhot
             skewness = 5 #Negative values are left skewed, positive values are right skewed.
@@ -51,7 +53,7 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N=12000): 		#Initialize Popul
         mob = random[0]
 
         prefmove = np.random.normal(loc=0.5, scale=0.2) #assigns individuals preference to move
-        node = [personcounter, susc, mob, mov, regionAndClimate, prefmove, finalloc]
+        node = [personcounter, susc, mob, mov, regionAndClimate, prefmove, finloc, newlocdeterminant]
         if susc>0.8 and mob>0.7 and prefmove>0.5:
             mov=1 #should move/can move/want to move = you move
             mov1List.append(node)
@@ -70,7 +72,7 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N=12000): 		#Initialize Popul
         #add to lists
         agentList.append(node)
     ogAgentList=agentList
-    return [[agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList]]
+    return [[agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList]] #what is the point of having ogAgent vs Agent if i am tracking changes with the various movlists
 
 def modifySusceptibilityBeforeMoveDecision(tempchange, agentList): #limit temp change 0-1 degrees in input file?
     for x in agentList:
@@ -85,12 +87,10 @@ def modifySusceptibilityBeforeMoveDecision(tempchange, agentList): #limit temp c
             x[1] = x[1]*(1+(tempchange/12))
     return agentList  
 
-def moveOrNotMoveAndEffects(agentList, suscList, movedList, othersList, tempchange):
-    for x in agentList:
-        mov = x[3]
-        regionAndClimate = x[4]
-        susc = x[1]
+def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, mov5List, tempchange):
+    for x in agentList: 
         mob = x[2]
+        susc = x[1]
         prefmove = x[5]
         if susc>0.8 and mob>0.7 and prefmove>0.5:
             mov=1 #should move/can move/want to move = you move
@@ -102,7 +102,85 @@ def moveOrNotMoveAndEffects(agentList, suscList, movedList, othersList, tempchan
             mov = 4 #can move and have weirdly high pref to move = you mov
         else: 
             mov = 5 #dont need to move (susc is low) = don't move
+    for x in mov1List:
+        mov = x[3]
+        regionAndClimate = x[4]
+        susc = x[1]
+        mob = x[2]
+        prefmove = x[5]
+        finloc = x[6]
+        newlocdeterminant= x[7]
+        if regionAndClimate==0:
+            newlocdeterminant = (random.random())
+            if newlocdeterminant <0.4: 
+                finloc = 2
+            if 0.4 <= newlocdeterminant <0.8:
+                finloc = 3
+            if 0.8 <= newlocdeterminant <=1:
+                finloc = 1
+        if regionAndClimate==1: 
+            newlocdeterminant = (random.random())
+            if newlocdeterminant 
+        if regionAndClimate==2:
+            newlocdeterminant = (random.random())
+            if newlocdeterminant 
+        if regionAndClimate==3: 
+            newlocdeterminant = (random.random())
+            if newlocdeterminant 
+            return
+    for x in mov2List: 
+        mov = x[3]
+        regionAndClimate = x[4]
+        susc = x[1]
+        mob = x[2]
+        prefmove = x[5]
+        if regionAndClimate==0: 
+            #something
+        if regionAndClimate==1: 
+            #something
+        if regionAndClimate==2:
+            #something
+        if regionAndClimate==3: 
+            #something
+    for x in mov3List: 
+        mov = x[3]
+        regionAndClimate = x[4]
+        susc = x[1]
+        mob = x[2]
+        prefmove = x[5]
+        if regionAndClimate==0: 
+            #something
+        if regionAndClimate==1: 
+            #something
+        if regionAndClimate==2:
+            #something
+        if regionAndClimate==3: 
+            #something
+    for x in mov4List:
+        mov = x[3]
+        regionAndClimate = x[4]
+        susc = x[1]
+        mob = x[2]
+        prefmove = x[5]
+        if regionAndClimate==0: 
+            #something
+        if regionAndClimate==1: 
+            #something
+        if regionAndClimate==2:
+            #something
+        if regionAndClimate==3: 
+            #something
+    
         if mov==1 and regionAndClimate==0: #should move/can move/want to move = you move
+            count += 1
+            return count
+            randomlist = random.sample(range(0,1)count) #assign movnum here
+            if 0 <= movnum < 0.4:
+                finalloc = 2
+            if 0.4 <= movnum < 0.8:
+                finalloc = 3
+            if 0.8 <= movnum < 1:
+                finalloc = 1
             #assign everyone here a random number between 0 and 1 
             #better regions for urban hot - rural hot, rural cold
             #if number is below 0 and 0.4 - rural hot
