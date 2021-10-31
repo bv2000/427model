@@ -233,9 +233,12 @@ def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, m
         return mov5List
 
 def main():
-#I've tried a bunch of things here all of them just make my code run forever haha
     [agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList] = addInitialNodes(0.2,0.5,0.15,12)
-    print [agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList]
+    print(ogAgentList)
+    newAgentList = modifySusceptibilityBeforeMoveDecision(0.2, agentList)
+    print(newAgentList)
+    final = moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, mov5List)
+    print(final)
 
 if __name__ == "__main__":
     main()
