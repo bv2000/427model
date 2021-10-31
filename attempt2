@@ -9,6 +9,7 @@ from typing import final
 import numpy as np
 from scipy.stats import skewnorm
 from os.path import exists
+import sys
 
 def addInitialNodes(multiplier,suscmean,suscstdev, N): 		#Initialize Population
 
@@ -45,6 +46,7 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N): 		#Initialize Population
         else:
             regionAndClimate = 3 #ruralcold
             skewness = 2
+        personcounter+=1
         skewness = skewness * multiplier 
         susc=np.random.normal(loc=suscmean, scale=suscstdev) #set susc of person, mean = 0.5, stdev = 0.15
         numValues = N/4
@@ -76,19 +78,19 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N): 		#Initialize Population
         #add to lists
         agentList.append(node)
     ogAgentList=agentList
-    return [[agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList]]
+    return agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList
 
 def modifySusceptibilityBeforeMoveDecision(tempchange, agentList): #limit temp change 0-1 degrees in input file?
     for x in agentList:
         regionAndClimate = x[4]
         if regionAndClimate == 0:
-            x[1] = x[1]*(1+(tempchange/6))
+            x[1] = x[1]*(1+(tempchange*6))
         elif regionAndClimate == 1:
-            x[1] = x[1]*(1+(tempchange/4))
+            x[1] = x[1]*(1+(tempchange*8))
         elif regionAndClimate == 2:
-            x[1] = x[1]*(1+(tempchange/14))
+            x[1] = x[1]*(1+(tempchange*2))
         elif regionAndClimate == 3:
-            x[1] = x[1]*(1+(tempchange/12))
+            x[1] = x[1]*(1+(tempchange*4))
     return agentList  
 
 def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, mov5List):
@@ -106,7 +108,6 @@ def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, m
             x[3] = 4 #can move and have weirdly high pref to move = you mov
         else: 
             x[3] = 5 #dont need to move (susc is low) = don't move
-        return agentList
     for x in mov1List:
         regionAndClimate = x[4]
         susc = x[1]
@@ -149,7 +150,6 @@ def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, m
                 x[6] = 1 #urbancold
             if 0.95 <= newlocdeterminant <=1:
                 x[6] = 3 #ruralcold 
-        return mov1List
     for x in mov2List: 
         regionAndClimate = x[4]
         susc = x[1]
@@ -164,7 +164,6 @@ def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, m
             x[6] = 2
         if regionAndClimate==3: 
             x[6] = 3
-        return mov2List
     for x in mov3List: 
         regionAndClimate = x[4]
         susc = x[1]
@@ -178,7 +177,6 @@ def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, m
             x[6] = 2
         if regionAndClimate==3: 
             x[6] = 3
-        return mov3List
     for x in mov4List:
         regionAndClimate = x[4]
         susc = x[1]
@@ -216,7 +214,6 @@ def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, m
                 x[6] = 0 #urbanhot
             if 0.67 <= newlocdeterminant <=1:
                 x[6] = 1 #urbancold
-        return mov4List
     for x in mov5List:
         regionAndClimate = x[4]
         susc = x[1]
@@ -230,13 +227,26 @@ def moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, m
             x[6] = 2
         if regionAndClimate==3: 
             x[6] = 3
-        return mov5List
+    return agentList, mov1List, mov2List, mov3List, mov4List, mov5List
 
 if __name__ == "__main__":
-    if __name__ == "__main__":
-    [agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList] = addInitialNodes(0.2,0.5,0.15,12)
-    print(ogAgentList)
+    agentList,mov1List,mov2List, mov3List, mov4List, mov5List, ogAgentList = addInitialNodes(0.2,0.5,0.15,12000)
+    print("This is the original agent list", len(ogAgentList))
+    print("This is before move mov1List", len(mov1List))
+    print("This is before move mov2List", len(mov2List))
+    print("This is before move mov3List", len(mov3List))
+    print("This is before move mov4List", len(mov4List))
+    print("This is before move mov5List", len(mov5List))
+    print(agentList[0][1])
     newAgentList = modifySusceptibilityBeforeMoveDecision(0.2, agentList)
-    print(newAgentList)
-    finalList = moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, mov5List)
-    print(finalList)
+    print("this is new agent list after modifying susceptibility using tempchange", len(newAgentList))
+    print(newAgentList[0][1])
+    finalAgentList,finalMov1List,finalMov2List, finalMov3List, finalMov4List, finalMov5List = moveOrNotMoveAndEffects(agentList, mov1List, mov2List, mov3List, mov4List, mov5List)
+    print("this is the final agent list after move/not move", len(finalAgentList))
+    print("this is final mov1list",len(finalMov1List))
+    print("this is final mov2list",len(finalMov2List))
+    print("this is final mov3list",len(finalMov3List))
+    print("this is final mov4list",len(finalMov4List))
+    print("this is final mov5list",len(finalMov5List))
+    sys.exit()
+    # or quit()x
