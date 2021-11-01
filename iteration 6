@@ -56,7 +56,7 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N): 		#Initialize Population
         mov=0
         tempchangesusc=0
 
-        prefmove = np.random.normal(loc=0.5, scale=0.2) #assigns individuals preference to move
+        prefmove = 1 #assigns individuals preference to move
         node = [personcounter, susc, mob, mov, initialRegionAndClimate, prefmove, newlocdeterminant, finalRegionAndClimate, tempchangesusc]
         if susc>0.7 and mob>0.7 and prefmove>0.5:
             mov=1 #should move/can move/want to move = you move
@@ -294,6 +294,7 @@ def iamreallytired(tocompareFinalAgentList):
     countfinal1 = 0
     countfinal2 = 0
     countfinal3 = 0
+    countnumbermoved = 0
     for x in tocompareFinalAgentList:
         if x[4]==0:
             countinit0= countinit0 +1
@@ -312,7 +313,10 @@ def iamreallytired(tocompareFinalAgentList):
             countfinal2= countfinal2 +1
         if x[7]==3:
             countfinal3= countfinal3 +1
-    return countinit0, countinit1, countinit2, countinit3, countfinal0, countfinal1, countfinal2, countfinal3
+    
+        if x[4]!=x[7]:
+            countnumbermoved = countnumbermoved +1
+    return countinit0, countinit1, countinit2, countinit3, countfinal0, countfinal1, countfinal2, countfinal3, countnumbermoved
 
 if __name__ == "__main__":
     ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List = addInitialNodes(0.1,0.5,0.1,12000)
@@ -349,7 +353,7 @@ if __name__ == "__main__":
     print(tocompareFinalAgentList[10000])
     print("this is comparing move list", len(tocompareFinalAgentList))
 
-    countinit0, countinit1, countinit2, countinit3, countfinal0, countfinal1, countfinal2, countfinal3 = iamreallytired(tocompareFinalAgentList)
+    countinit0, countinit1, countinit2, countinit3, countfinal0, countfinal1, countfinal2, countfinal3, countnumbermoved = iamreallytired(tocompareFinalAgentList)
     print("# in urbanhot before move:", countinit0)
     print("# in urbancold before move:", countinit1)
     print("# in ruralhot before move:", countinit2)
@@ -358,6 +362,7 @@ if __name__ == "__main__":
     print("# in urbancold after move:", countfinal1)
     print("# in ruralhot after move:", countfinal2)
     print("# in ruralcold after move:", countfinal3)
+    print('# who moved:', countnumbermoved)
 
 
     sys.exit()
