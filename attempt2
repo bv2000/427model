@@ -292,7 +292,7 @@ def moveOrNotMoveAndEffects(aftertempchangeAgentList, aftertempchangeMov1List, a
     return aftermoveAgentList, aftermoveMov1List, aftermoveMov2List, aftermoveMov3List, aftermoveMov4List, aftermoveMov5List, tocompareFinalAgentList
 
 if __name__ == "__main__":
-    ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List, agentList = addInitialNodes(0.2,0.5,0.15,120000)
+    ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List, agentList = addInitialNodes(0.2,0.5,0.15,12000)
     print("This is the original agent list", len(ogAgentList))
     print("This is before move mov1List", len(ogMov1List))
     print("This is before move mov2List", len(ogMov2List))
@@ -304,6 +304,9 @@ if __name__ == "__main__":
     print(ogMov1List[3])
     print(ogMov1List[4])
     print(ogMov1List[5])
+    print(ogAgentList[0])
+    print(ogAgentList[2])
+    print(ogAgentList[1000])
     aftertempchangeAgentList, aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List, tocompareAfterTempChangeAgentList = modifySusceptibilityBeforeMoveDecision(0.2, agentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List)
     print("this is new agent list after modifying susceptibility using tempchange", len(aftertempchangeAgentList))
     print("this is comparing after temp change list", len(tocompareAfterTempChangeAgentList))
@@ -313,6 +316,10 @@ if __name__ == "__main__":
     print(aftertempchangeMov1List[3])
     print(aftertempchangeMov1List[4])
     print(aftertempchangeMov1List[5])
+    print(tocompareAfterTempChangeAgentList[0])
+    print(tocompareAfterTempChangeAgentList[2])
+    print(tocompareAfterTempChangeAgentList[1000])
+    print()
     aftermoveAgentList, aftermoveMov1List, aftermoveMov2List, aftermoveMov3List, aftermoveMov4List, aftermoveMov5List, tocompareFinalAgentList = moveOrNotMoveAndEffects(aftertempchangeAgentList, aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List)
     print("this is the final agent list after move/not move", len(aftermoveAgentList))
     print("this is final mov1list",len(aftermoveMov1List))
@@ -326,6 +333,9 @@ if __name__ == "__main__":
     print(aftermoveMov1List[3])
     print(aftermoveMov1List[4])
     print(aftermoveMov1List[5])
+    print(tocompareFinalAgentList[0])
+    print(tocompareFinalAgentList[2])
+    print(tocompareFinalAgentList[1000])
     print("this is comparing move list", len(tocompareFinalAgentList))
 
     sys.exit()
