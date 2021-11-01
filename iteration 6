@@ -1,4 +1,4 @@
-# Bhamini Code - 6th Iteration -
+# Bhamini Code - 6th Iteration
 # 427 - Group Model - Siegel
 # Climate Change, Economic Inequality, and Health Outcomes
 
@@ -14,13 +14,13 @@ import sys
 def addInitialNodes(multiplier,suscmean,suscstdev, N): 		#Initialize Population
 
 	#lists of agents
-    agentList = list()      #List of all people
-    ogMov1List = list()   	#List of people who should move/can move/want to move; outcome: move
-    ogMov2List = list()		#List of people wo should move/can't move; outcome: don't move
-    ogMov3List = list()       #List of people who should move/can move/don't want move; outcome: don't move
-    ogMov4List = list()       #List of people who can move and have weirdly high pref to move; outcome: move
-    ogMov5List = list()       #List of people who dont need to move (susc is low); outcome: don't move
-    
+    agentList = list()          #List of all people
+    ogMov1List = list()   	    #List of people who should move/can move/want to move; outcome: move
+    ogMov2List = list()		    #List of people wo should move/can't move; outcome: don't move
+    ogMov3List = list()         #List of people who should move/can move/don't want move; outcome: don't move
+    ogMov4List = list()         #List of people who can move and have weirdly high pref to move; outcome: move
+    ogMov5List = list()         #List of people who dont need to move (susc is low); outcome: don't move
+
 	#Create list of individuals
     personcounter=0 		#counter for setting personNum
     #Create lists
@@ -34,16 +34,16 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N): 		#Initialize Population
 
         if personcounter<N/4:
             initialRegionAndClimate =0 #urbanhot
-            skewness = 5 #Negative values are left skewed, positive values are right skewed.
+            skewness = 0.5 #Negative values are left skewed, positive values are right skewed.
         elif personcounter<N/2:
             initialRegionAndClimate = 1 #urbancold
-            skewness = 5
+            skewness = 0.5
         elif personcounter<3*N/4:
             initialRegionAndClimate= 2 #ruralhot
-            skewness = 2
+            skewness = 0.2
         else:
             initialRegionAndClimate = 3 #ruralcold
-            skewness = 2
+            skewness = 0.2
         personcounter+=1
 
         skewness = skewness * multiplier #multiplier changes existing regional inequality
@@ -59,107 +59,106 @@ def addInitialNodes(multiplier,suscmean,suscstdev, N): 		#Initialize Population
 
         prefmove = np.random.normal(loc=0.5, scale=0.2) #assigns individuals preference to move
         node = [personcounter, susc, mob, mov, initialRegionAndClimate, prefmove, newlocdeterminant, finalRegionAndClimate]
-        if susc>0.8 and mob>0.7 and prefmove>0.5:
+
+        if susc>0.7 and mob>0.7 and prefmove>0.5:
             mov=1 #should move/can move/want to move = you move
             ogMov1List.append(node)
-        elif susc>0.8  and  mob<=0.7:
+        elif susc>0.7  and  mob<=0.7:
             mov = 2 #should move/can't move = you don't move
             ogMov2List.append(node)
-        elif susc>0.8 and mob>0.7 and prefmove<=0.5:
+        elif susc>0.7 and mob>0.7 and prefmove<=0.5:
             mov = 3 #should move/can move/don't want move = you don't move
             ogMov3List.append(node)
-        elif mob>0.7 and prefmove>0.9: #is there an automatic assumption here that susc is low
+        elif mob>0.7 and prefmove>0.8: #is there an automatic assumption here that susc is low
             mov = 4 #can move and have weirdly high pref/propensity to move = you mov
             ogMov4List.append(node)
         else: 
             mov = 5 #dont need to move (susc is low) = don't move
             ogMov5List.append(node)
-        agentList.append(node)
-    ogAgentList=agentList
-    return ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List, agentList
+    ogAgentList=ogMov1List + ogMov2List + ogMov3List + ogMov4List + ogMov5List
+    return ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List 
 
-def modifySusceptibilityBeforeMoveDecision(tempchange, agentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List): #limit temp change 0-1 degrees in input file?
-    for x in agentList:
+def modifySusceptibilityBeforeMoveDecision(tempchange, ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List): #limit temp change 0-1 degrees in input file?
+    for x in ogAgentList:
         initialRegionAndClimate = x[4]
         if initialRegionAndClimate == 0:
-            x[1] = x[1]*(1+(tempchange*6))
+            x[1] = x[1]*(1+(tempchange/6))
         elif initialRegionAndClimate == 1:
-            x[1] = x[1]*(1+(tempchange*8))
+            x[1] = x[1]*(1+(tempchange/8))
         elif initialRegionAndClimate == 2:
-            x[1] = x[1]*(1+(tempchange*2))
+            x[1] = x[1]*(1+(tempchange/2))
         elif initialRegionAndClimate == 3:
-            x[1] = x[1]*(1+(tempchange*4))
-        aftertempchangeAgentList=agentList
+            x[1] = x[1]*(1+(tempchange/4))
     for x in ogMov1List:
         initialRegionAndClimate = x[4]
         if initialRegionAndClimate == 0:
-            x[1] = x[1]*(1+(tempchange*6))
+            x[1] = x[1]*(1+(tempchange/6))
         elif initialRegionAndClimate == 1:
-            x[1] = x[1]*(1+(tempchange*8))
+            x[1] = x[1]*(1+(tempchange/8))
         elif initialRegionAndClimate == 2:
-            x[1] = x[1]*(1+(tempchange*2))
+            x[1] = x[1]*(1+(tempchange/2))
         elif initialRegionAndClimate == 3:
-            x[1] = x[1]*(1+(tempchange*4))
+            x[1] = x[1]*(1+(tempchange/4))
         aftertempchangeMov1List = ogMov1List
     for x in ogMov2List:
         initialRegionAndClimate = x[4]
         if initialRegionAndClimate == 0:
-            x[1] = x[1]*(1+(tempchange*6))
+            x[1] = x[1]*(1+(tempchange/6))
         elif initialRegionAndClimate == 1:
-            x[1] = x[1]*(1+(tempchange*8))
+            x[1] = x[1]*(1+(tempchange/8))
         elif initialRegionAndClimate == 2:
-            x[1] = x[1]*(1+(tempchange*2))
+            x[1] = x[1]*(1+(tempchange/2))
         elif initialRegionAndClimate == 3:
-            x[1] = x[1]*(1+(tempchange*4))
+            x[1] = x[1]*(1+(tempchange/4))
         aftertempchangeMov2List = ogMov2List
     for x in ogMov3List:
         initialRegionAndClimate = x[4]
         if initialRegionAndClimate == 0:
-            x[1] = x[1]*(1+(tempchange*6))
+            x[1] = x[1]*(1+(tempchange/6))
         elif initialRegionAndClimate == 1:
-            x[1] = x[1]*(1+(tempchange*8))
+            x[1] = x[1]*(1+(tempchange/8))
         elif initialRegionAndClimate == 2:
-            x[1] = x[1]*(1+(tempchange*2))
+            x[1] = x[1]*(1+(tempchange/2))
         elif initialRegionAndClimate == 3:
-            x[1] = x[1]*(1+(tempchange*4))
+            x[1] = x[1]*(1+(tempchange/4))
         aftertempchangeMov3List = ogMov3List
     for x in ogMov4List:
         initialRegionAndClimate = x[4]
         if initialRegionAndClimate == 0:
-            x[1] = x[1]*(1+(tempchange*6))
+            x[1] = x[1]*(1+(tempchange/6))
         elif initialRegionAndClimate == 1:
-            x[1] = x[1]*(1+(tempchange*8))
+            x[1] = x[1]*(1+(tempchange/8))
         elif initialRegionAndClimate == 2:
-            x[1] = x[1]*(1+(tempchange*2))
+            x[1] = x[1]*(1+(tempchange/2))
         elif initialRegionAndClimate == 3:
-            x[1] = x[1]*(1+(tempchange*4))
+            x[1] = x[1]*(1+(tempchange/4))
         aftertempchangeMov4List = ogMov4List
     for x in ogMov5List:
         initialRegionAndClimate = x[4]
         if initialRegionAndClimate == 0:
-            x[1] = x[1]*(1+(tempchange*6))
+            x[1] = x[1]*(1+(tempchange/6))
         elif initialRegionAndClimate == 1:
-            x[1] = x[1]*(1+(tempchange*8))
+            x[1] = x[1]*(1+(tempchange/8))
         elif initialRegionAndClimate == 2:
-            x[1] = x[1]*(1+(tempchange*2))
+            x[1] = x[1]*(1+(tempchange/2))
         elif initialRegionAndClimate == 3:
-            x[1] = x[1]*(1+(tempchange*4))
+            x[1] = x[1]*(1+(tempchange/4))
         aftertempchangeMov5List = ogMov5List
-        tocompareAfterTempChangeAgentList = ogMov1List + ogMov2List + ogMov3List + ogMov4List + ogMov5List
-    return aftertempchangeAgentList, aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List, tocompareAfterTempChangeAgentList
+        tocompareAfterTempChangeAgentList = aftertempchangeMov1List + aftertempchangeMov2List + aftertempchangeMov3List + aftertempchangeMov4List + aftertempchangeMov5List
+    return aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List, tocompareAfterTempChangeAgentList
 
-def moveOrNotMoveAndEffects(aftertempchangeAgentList, aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List):
-    for x in aftertempchangeAgentList: 
+def moveOrNotMoveAndEffects(aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List, tocompareAfterTempChangeAgentList):
+    for x in tocompareAfterTempChangeAgentList: 
         mob = x[2]
         susc = x[1]
         prefmove = x[5]
-        if susc>0.8 and mob>0.7 and prefmove>0.5:
+        if susc>0.7 and mob>0.7 and prefmove>0.5:
             x[3]=1 #should move/can move/want to move = you move
-        elif susc>0.8  and  mob<=0.7:
+        elif susc>0.7  and  mob<=0.7:
             x[3] = 2 #should move/can't move = you don't move
-        elif susc>0.8 and mob>0.7 and prefmove<=0.5:
+        elif susc>0.7 and mob>0.7 and prefmove<=0.5:
             x[3] = 3 #should move/can move/don't want move = you don't move
-        elif mob>0.7 and prefmove>0.9: 
+        elif mob>0.7 and prefmove>0.8: 
             x[3] = 4 #can move and have weirdly high pref to move = you mov
         else: 
             x[3] = 5 #dont need to move (susc is low) = don't move
@@ -287,12 +286,12 @@ def moveOrNotMoveAndEffects(aftertempchangeAgentList, aftertempchangeMov1List, a
     aftermoveMov3List = aftertempchangeMov3List
     aftermoveMov4List = aftertempchangeMov4List
     aftermoveMov5List = aftertempchangeMov5List
-    aftermoveAgentList = aftertempchangeAgentList
+    aftermoveAgentList = tocompareAfterTempChangeAgentList
     tocompareFinalAgentList = aftermoveMov1List + aftermoveMov2List + aftermoveMov3List + aftermoveMov4List + aftermoveMov5List
     return aftermoveAgentList, aftermoveMov1List, aftermoveMov2List, aftermoveMov3List, aftermoveMov4List, aftermoveMov5List, tocompareFinalAgentList
 
 if __name__ == "__main__":
-    ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List, agentList = addInitialNodes(0.2,0.5,0.15,12000)
+    ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List = addInitialNodes(0.1,0.5,0.1,12000)
     print("This is the original agent list", len(ogAgentList))
     print("This is before move mov1List", len(ogMov1List))
     print("This is before move mov2List", len(ogMov2List))
@@ -305,10 +304,12 @@ if __name__ == "__main__":
     print(ogMov1List[4])
     print(ogMov1List[5])
     print(ogAgentList[0])
-    print(ogAgentList[2])
-    print(ogAgentList[1000])
-    aftertempchangeAgentList, aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List, tocompareAfterTempChangeAgentList = modifySusceptibilityBeforeMoveDecision(0.2, agentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List)
-    print("this is new agent list after modifying susceptibility using tempchange", len(aftertempchangeAgentList))
+    print(ogAgentList[2000])
+    print(ogAgentList[4000])
+    print(ogAgentList[6000])
+    print(ogAgentList[8000])
+    aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List, tocompareAfterTempChangeAgentList = modifySusceptibilityBeforeMoveDecision(0.5, ogAgentList, ogMov1List, ogMov2List, ogMov3List, ogMov4List, ogMov5List)
+    print("this is new agent list after modifying susceptibility using tempchange", len(tocompareAfterTempChangeAgentList))
     print("this is comparing after temp change list", len(tocompareAfterTempChangeAgentList))
     print(aftertempchangeMov1List[0])
     print(aftertempchangeMov1List[1])
@@ -317,10 +318,11 @@ if __name__ == "__main__":
     print(aftertempchangeMov1List[4])
     print(aftertempchangeMov1List[5])
     print(tocompareAfterTempChangeAgentList[0])
-    print(tocompareAfterTempChangeAgentList[2])
-    print(tocompareAfterTempChangeAgentList[1000])
-    print()
-    aftermoveAgentList, aftermoveMov1List, aftermoveMov2List, aftermoveMov3List, aftermoveMov4List, aftermoveMov5List, tocompareFinalAgentList = moveOrNotMoveAndEffects(aftertempchangeAgentList, aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List)
+    print(tocompareAfterTempChangeAgentList[2000])
+    print(tocompareAfterTempChangeAgentList[4000])
+    print(tocompareAfterTempChangeAgentList[6000])
+    print(tocompareAfterTempChangeAgentList[8000])
+    aftermoveAgentList, aftermoveMov1List, aftermoveMov2List, aftermoveMov3List, aftermoveMov4List, aftermoveMov5List, tocompareFinalAgentList = moveOrNotMoveAndEffects(aftertempchangeMov1List, aftertempchangeMov2List, aftertempchangeMov3List, aftertempchangeMov4List, aftertempchangeMov5List, tocompareAfterTempChangeAgentList)
     print("this is the final agent list after move/not move", len(aftermoveAgentList))
     print("this is final mov1list",len(aftermoveMov1List))
     print("this is final mov2list",len(aftermoveMov2List))
@@ -334,8 +336,10 @@ if __name__ == "__main__":
     print(aftermoveMov1List[4])
     print(aftermoveMov1List[5])
     print(tocompareFinalAgentList[0])
-    print(tocompareFinalAgentList[2])
-    print(tocompareFinalAgentList[1000])
+    print(tocompareFinalAgentList[2000])
+    print(tocompareFinalAgentList[4000])
+    print(tocompareFinalAgentList[6000])
+    print(tocompareFinalAgentList[8000])
     print("this is comparing move list", len(tocompareFinalAgentList))
 
     sys.exit()
