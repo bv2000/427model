@@ -1,0 +1,393 @@
+# Bhamini Code - 6th Iteration
+# 427 - Group Model - Siegel
+# Climate Change, Economic Inequality, and Health Outcomes
+
+import math
+import random
+from typing import final
+import numpy as np
+from os.path import exists
+import sys
+import pandas as pd
+from numpy import mean, tracemalloc_domain
+from numpy import repeat
+import statistics
+
+def addInitialNodes(suscmean,suscstdev, mobmean, mobstdev, N): 		#Initialize Population
+
+	#lists of agents
+    AgentList = list()          #List of all people
+
+	#Create list of individuals
+    personcounter=0 		#counter for setting personNum
+    #Create lists
+    while personcounter<N:
+        #Set node properties
+        #A node is a list of properties: personcounter, susc, mob, mov, initialRegionAndClimate, newlocdeterminant, finalregionAndClimate, tempchangesusc, newmov
+
+        newlocdeterminant=0 #random number that determines where person who moves ends up; irrelevant for those who don't move
+        initialRegionAndClimate=0
+        finalRegionAndClimate=0
+
+        susc=np.random.normal(loc=suscmean, scale=suscstdev) #set susc of person
+        mob=np.random.normal(loc=mobmean, scale=mobstdev)
+
+        oldmov=0
+        newmov=0
+        tempchangesusc=0
+
+        node = [personcounter, susc, mob, oldmov, initialRegionAndClimate, newlocdeterminant, finalRegionAndClimate, tempchangesusc, newmov]
+        personcounter+=1
+        AgentList.append(node)
+    return AgentList
+
+def setInitialRegionAndClimate(AgentList):
+    for x in AgentList:
+        initialRegionAndClimate = x[4]
+        if x[0]<len(AgentList)/4:
+            x[4]=0 #urbanhot
+        elif x[0]<len(AgentList)/2:
+            x[4]= 1 #urbancold
+        elif x[0]<len(AgentList)*(3/4):
+            x[4]= 2 #ruralhot
+        else:
+            x[4]= 3 #ruralcold
+    return AgentList
+
+def setOldMov(AgentList):
+    for x in AgentList:
+        susc = x[1]
+        mob = x[2]
+        if susc>=0.7 and mob>=0.7: 
+            x[3]=1 #should move/can move = you move
+        elif susc>=0.7 and mob<=0.7:
+            x[3] = 2 #should move/can't move = you don't move
+        else: 
+            x[3]=3 #dont need to move (susc is low) = don't move
+        ogAgentList = AgentList
+    return ogAgentList
+    
+def modifySusceptibilityBeforeMoveDecision(tempchange, ogAgentList): #limit temp change 0-1 degrees in input file?
+    for x in ogAgentList:
+        tempchangesusc = x[7]
+        mob = x[2]
+        newmov = x[8]
+        initialRegionAndClimate = x[4]
+        if x[4] == 0: #urbanhot
+            x[7] = x[1]*(1+(temp*0.4))
+        elif x[4] == 1: #rbancold
+            x[7] = x[1]*(1+(temp*0.5))
+        elif x[4] == 2: #rhot
+            x[7] = x[1]*(1+(temp*0.2))
+        elif x[4] == 3: #ruralcold
+            x[7] = x[1]*(1+(temp*0.3))
+        TempChangeAgentList = ogAgentList
+    return TempChangeAgentList
+
+def movAfterSusc(TempChangeAgentList):
+    for x in TempChangeAgentList:
+        tempchangesusc= x[7]
+        mob = x[2]
+        x[5] = random.random()
+        if tempchangesusc>=0.7 and mob>=0.7: 
+            x[8]=1 #should move/can move = you move
+        elif tempchangesusc>=0.7 and mob<=0.7:
+            x[8]= 2 #should move/can't move = you don't move
+        else: 
+            x[8]=3 #dont need to move (susc is low) = don't move
+        tocompareAfterTempChangeAgentList = TempChangeAgentList
+    return tocompareAfterTempChangeAgentList
+
+def moveOrNotMoveAndEffects(tocompareAfterTempChangeAgentList):
+    for x in tocompareAfterTempChangeAgentList:
+        initialRegionAndClimate = x[4]
+        tempchangesusc = x[7]
+        mob = x[2]
+        newmov = x[8]
+        if newmov == 1:
+            if initialRegionAndClimate==0: #urbanhot; better: rural hot rural cold
+                if x[5] <0.45: 
+                    x[6] = 2 #ruralhot
+                elif 0.45 <= x[5] <0.9:
+                    x[6] = 3 #ruralcold
+                elif 0.9 <= x[5] <=1:
+                    x[6] = 1 #urbancold
+            if initialRegionAndClimate==1: #urbancold; all are better
+                if x[5] <0.4:
+                    x[6] = 0 #urbanhot
+                if 0.4 <= x[5] <0.7:
+                    x[6] = 2 #ruralhot
+                if 0.7 <= x[5] <=1:
+                    x[6] = 3 #ruralcold
+            if initialRegionAndClimate==2: #ruralhot; best option (move to another ruralhot?)
+                if x[5] <0.7:
+                    x[6] = 2 #ruralhot
+                if 0.7 <= x[5] <0.8:
+                    x[6] = 0 #urbanhot
+                if 0.8 <= x[5] <0.9:
+                    x[6] = 1 #urbancold
+                if 0.9 <= x[5] <=1:
+                    x[6] = 3 #ruralcold
+            if initialRegionAndClimate==3: #ruralcold; better: rural hot
+                if x[5] <0.75:
+                    x[6] = 2 #ruralhot
+                if 0.75 <= x[5] <0.85:
+                    x[6] = 0 #urbanhot
+                if 0.85 <= x[5] <0.95:
+                    x[6] = 1 #urbancold
+                if 0.95 <= x[5] <=1:
+                    x[6] = 3 #ruralcold 
+        if newmov == 2: 
+            initialRegionAndClimate = x[4]
+            if initialRegionAndClimate==0: 
+                x[6] = 0
+            elif initialRegionAndClimate==1: 
+                x[6] = 1
+            elif initialRegionAndClimate==2:
+                x[6] = 2
+            elif initialRegionAndClimate==3: 
+                x[6] = 3
+        if newmov ==3:
+            initialRegionAndClimate = x[4]
+            if initialRegionAndClimate==0: 
+                x[6] = 0
+            elif initialRegionAndClimate==1: 
+                x[6] = 1
+            elif initialRegionAndClimate==2:
+                x[6] = 2
+            elif initialRegionAndClimate==3: 
+                x[6] = 3
+        tocompareFinalAgentList = tocompareAfterTempChangeAgentList
+    return tocompareFinalAgentList
+
+def countsRegionAndClimate(tocompareFinalAgentList):
+    countinit0 = 0
+    countinit1 = 0
+    countinit2 = 0
+    countinit3 = 0
+    countfinal0 = 0
+    countfinal1 = 0
+    countfinal2 = 0
+    countfinal3 = 0
+    countnumbermovedbymovdiff = 0
+    countnumbermovedbymov1 =0
+    for x in tocompareFinalAgentList:
+        if x[4]==0:
+            countinit0= countinit0 +1
+        if x[4]==1:
+            countinit1= countinit1 +1
+        if x[4]==2:
+            countinit2= countinit2 +1
+        if x[4]==3:
+            countinit3= countinit3 +1
+
+        if x[6]==0:
+            countfinal0= countfinal0 +1
+        if x[6]==1:
+            countfinal1= countfinal1 +1
+        if x[6]==2:
+            countfinal2= countfinal2 +1
+        if x[6]==3:
+            countfinal3= countfinal3 +1
+
+        if x[4]!=x[6]:
+            countnumbermovedbymovdiff = countnumbermovedbymovdiff +1
+        if x[8]==1:
+            countnumbermovedbymov1 = countnumbermovedbymov1 +1
+    return countinit0, countinit1, countinit2, countinit3, countfinal0, countfinal1, countfinal2, countfinal3, countnumbermovedbymovdiff, countnumbermovedbymov1
+
+def countsPerMovOutcome(tocompareFinalAgentList):
+    initcountMov1=0
+    initcountMov2=0
+    initcountMov3=0
+    finalcountMov1=0
+    finalcountMov2=0
+    finalcountMov3=0
+    for x in tocompareFinalAgentList:
+        if x[3]==1:
+            initcountMov1=initcountMov1+1
+        if x[3]==2:
+            initcountMov2=initcountMov2+1
+        if x[3]==3:
+            initcountMov3=initcountMov3+1
+        if x[8]==1:
+            finalcountMov1=finalcountMov1+1
+        if x[8]==2:
+            finalcountMov2=finalcountMov2+1
+        if x[8]==3:
+            finalcountMov3=finalcountMov3+1
+    return initcountMov1, initcountMov2, initcountMov3, finalcountMov1, finalcountMov2, finalcountMov3
+
+def countsOther(tocompareFinalAgentList):
+    lowinitsusc=0
+    highinitsusc=0
+    lowmob=0
+    highmob=0
+    lowtempchangesusc=0
+    hightempchangesusc=0
+    for x in tocompareFinalAgentList:
+        if x[1]<0.7:
+            lowinitsusc=lowinitsusc+1
+        else:
+            highinitsusc=highinitsusc+1
+        if x[2]<0.7:
+            lowmob=lowmob+1
+        else:
+            highmob=highmob+1
+        if x[7]<0.7:
+            lowtempchangesusc=lowtempchangesusc+1
+        else:
+            hightempchangesusc=hightempchangesusc+1
+    return lowinitsusc, highinitsusc, lowmob, highmob, lowtempchangesusc, hightempchangesusc
+
+def listsforpandas(tocompareFinalAgentList, temp):
+    #node = [personcounter, susc, mob, oldmov, initialRegionAndClimate, newlocdeterminant, finalRegionAndClimate, tempchangesusc, newmov]
+    personcounterList = []
+    suscList = []
+    mobList = []
+    oldmovList=[]
+    initialRegionAndClimateList=[]
+    newlocdeterminantList=[]
+    finalRegionAndClimateList=[]
+    tempchangesuscList=[]
+    newmovList=[]
+    tempchangeList = []
+    for x in tocompareFinalAgentList:
+        tempchangeList.append(temp)
+    for x in tocompareFinalAgentList:
+        pc = x[0]
+        personcounterList.append(pc)
+        s=x[1]
+        suscList.append(s)
+        mb=x[2]
+        mobList.append(mb)
+        oldmv=x[3]
+        oldmovList.append(oldmv)
+        ogregclim=x[4]
+        initialRegionAndClimateList.append(ogregclim)
+        locdet=x[5]
+        newlocdeterminantList.append(locdet)
+        finregclim=x[6]
+        finalRegionAndClimateList.append(finregclim)
+        suscfin=x[7]
+        tempchangesuscList.append(suscfin)
+        newmv=x[8]
+        newmovList.append(newmv)
+    tempchangesuscAvg = mean(tempchangesuscList)
+    mobAvg = mean(mobList)
+    return personcounterList, suscList, mobList, oldmovList, initialRegionAndClimateList, newlocdeterminantList, finalRegionAndClimateList, tempchangesuscList, newmovList, tempchangeList, tempchangesuscAvg, mobAvg
+
+#def pandaspandaspandas(tempchangeList, personcounterList, suscList, mobList, oldmovList, initialRegionAndClimateList, newlocdeterminantList, finalRegionAndClimateList, tempchangesuscList, newmovList):
+    #df = pd.DataFrame(
+    #{
+        #"tempchange":tempchangeList,
+       # "personcounter": personcounterList,
+        #"susc": suscList,
+        #"mob": mobList,
+        #"old mov": oldmovList,
+        #"initial region and climate": initialRegionAndClimateList,
+        #"new location determinant": newlocdeterminantList,
+        #"final region and climate": finalRegionAndClimateList,
+        #"susc after temp change": tempchangesuscList, 
+        #"new mov": newmovList,
+    #})
+    #print(df)
+
+if __name__ == "__main__":
+    runs=0
+    tempchange= [0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4, 0.4, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1.0, 1.0]
+    #[
+        #0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+        #0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 
+        #0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 
+        #0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
+        #0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+        #0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 
+        #0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 
+        #0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 
+        #0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 
+       # 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    mobstdevList = [0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4, 0.4, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1.0, 1.0]
+    #[
+        #0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+        #0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 
+        #0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 
+        #0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
+        #0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+        #0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 
+        #0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 
+        #0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 
+        #0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 
+        #1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    while runs<20:
+        suscmean=0.5
+        suscstdev=0.2
+        mobmean=0.5
+        N=400
+        percentmovedall=[]
+        percentmovedAvgList=[]
+        tempchangeList2=[]
+        mobstdevList2=[]
+        finalpercentm=[]
+        for temp in tempchange:
+            for mobstdev in mobstdevList:
+                AgentList = addInitialNodes(suscmean,suscstdev,mobmean,mobstdev,N)
+                AgentList = setInitialRegionAndClimate(AgentList)
+                ogAgentList = setOldMov(AgentList)
+                TempChangeAgentList = modifySusceptibilityBeforeMoveDecision(tempchange, ogAgentList)
+                tocompareAfterTempChangeAgentList = movAfterSusc(TempChangeAgentList)
+                tocompareFinalAgentList = moveOrNotMoveAndEffects(tocompareAfterTempChangeAgentList)
+                countinit0, countinit1, countinit2, countinit3, countfinal0, countfinal1, countfinal2, countfinal3, countnumbermovedbymovdiff, countnumbermovedbymov1 = countsRegionAndClimate(tocompareFinalAgentList)
+                #print("the temp change is:", temp, "degrees")
+                #print("population of:", N)
+                #print("susc mean:", suscmean, "susc stdev:", suscstdev)
+                #print("mob mean:", mobmean, "mob stdev:", mobstdev)
+                #print("# in urbanhot after move:", countfinal0)
+                #print("# in urbancold after move:", countfinal1)
+                #print("# in ruralhot after move:", countfinal2)
+                #print("# in ruralcold after move:", countfinal3)
+                initcountMov1, initcountMov2, initcountMov3, finalcountMov1, finalcountMov2, finalcountMov3 = countsPerMovOutcome(tocompareFinalAgentList)
+                #print("# with oldmov 1 is", initcountMov1)
+                #print("# with oldmov 2 is", initcountMov2)
+                #print("# with oldmov 3 is", initcountMov3)
+                #print("# with newmov 1 is", finalcountMov1)
+                #print("# with newmov 2 is", finalcountMov2)
+                #print("# with newmov 3 is", finalcountMov3)
+                lowinitsusc, highinitsusc, lowmob, highmob, lowtempchangesusc, hightempchangesusc=countsOther(tocompareFinalAgentList)
+                #print("# with low initialsusc", lowinitsusc)
+                #print("# with high initialsusc", highinitsusc)
+                #print("# with low tempchangesusc", lowtempchangesusc)
+                #print("# with high tempchangesusc", hightempchangesusc)
+                personcounterList, suscList, mobList, oldmovList, initialRegionAndClimateList, newlocdeterminantList, finalRegionAndClimateList, tempchangesuscList, newmovList, tempchangeList, tempchangesuscAvg, mobAvg = listsforpandas(tocompareFinalAgentList, temp)
+                #print("the aftertempchangesuscavg is:", tempchangesuscAvg)
+                #print("the mob avg is:", mobAvg)
+                #print('# moved by diff bw region/climate:', countnumbermovedbymovdiff)
+                #print('# moved by being in mov1:', countnumbermovedbymov1)
+                #print('% moved by diff bw region/climate:', percentmoved)
+                percentmoved=countnumbermovedbymovdiff/(len(tocompareFinalAgentList))
+                percentmovedall.append(percentmoved)
+                eachpercentmovedAvg = mean(percentmovedall)
+                percentmovedAvgList.append(eachpercentmovedAvg)
+        print(len(tocompareFinalAgentList))
+        print(len(percentmovedall)) #len of percentmovedAvgList is the same bc tocompareFinalAgentList is only 400 long so all of these are all 400 long as well
+        tempchangeList2 = [item for item in tempchange for i in range(100)]
+        mobstdevList2 = [item for item in mobstdevList for i in range(100)]
+        tempchangeListFinal = tempchangeList2
+        percentmovedAvgListFinal = percentmovedAvgList  
+        mobstdevListFinal = mobstdevList2
+        runs=runs+1
+        print(len(mobstdevListFinal))
+        print(len(tempchangeListFinal))
+        print(len(percentmovedAvgListFinal))
+        #newpercentmoved = [statistics.mean(percentmovedAvgListFinal[i:i + 100]) for i in range(0, len(percentmovedAvgListFinal), 100)]
+    df = pd.DataFrame(
+        {
+        "tempchange": tempchangeListFinal,
+        "mob standard dev (inequality)": mobstdevListFinal,
+        "% moved": percentmovedAvgListFinal
+        })
+
+    df.to_csv('Bhamini_PandasDataframe.csv')
+
+    sys.exit()
+    # or quit()x
