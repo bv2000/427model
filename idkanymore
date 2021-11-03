@@ -319,18 +319,18 @@ if __name__ == "__main__":
         #0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 
         #0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 
         #1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    while runs<20:
-        suscmean=0.5
-        suscstdev=0.2
-        mobmean=0.5
-        N=400
-        percentmovedall=[]
-        percentmovedAvgList=[]
-        tempchangeList2=[]
-        mobstdevList2=[]
-        finalpercentm=[]
-        for temp in tempchange:
-            for mobstdev in mobstdevList:
+    for temp in tempchange:
+        for mobstdev in mobstdevList:
+            while runs<20:
+                suscmean=0.5
+                suscstdev=0.2
+                mobmean=0.5
+                N=400
+                percentmovedall=[]
+                percentmovedAvgList=[]
+                tempchangeList2=[]
+                mobstdevList2=[]
+                finalpercentm=[]
                 AgentList = addInitialNodes(suscmean,suscstdev,mobmean,mobstdev,N)
                 AgentList = setInitialRegionAndClimate(AgentList)
                 ogAgentList = setOldMov(AgentList)
