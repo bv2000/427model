@@ -325,7 +325,7 @@ if __name__ == "__main__":
                 suscmean=0.5
                 suscstdev=0.2
                 mobmean=0.5
-                N=400
+                N=4
                 percentmovedall=[]
                 percentmovedAvgList=[]
                 tempchangeList2=[]
@@ -368,6 +368,7 @@ if __name__ == "__main__":
                 percentmovedall.append(percentmoved)
                 eachpercentmovedAvg = mean(percentmovedall)
                 percentmovedAvgList.append(eachpercentmovedAvg)
+            runs=runs+1
         print(len(tocompareFinalAgentList))
         print(len(percentmovedall)) #len of percentmovedAvgList is the same bc tocompareFinalAgentList is only 400 long so all of these are all 400 long as well
         tempchangeList2 = [item for item in tempchange for i in range(100)]
@@ -375,7 +376,6 @@ if __name__ == "__main__":
         tempchangeListFinal = tempchangeList2
         percentmovedAvgListFinal = percentmovedAvgList  
         mobstdevListFinal = mobstdevList2
-        runs=runs+1
         print(len(mobstdevListFinal))
         print(len(tempchangeListFinal))
         print(len(percentmovedAvgListFinal))
