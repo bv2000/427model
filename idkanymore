@@ -294,7 +294,6 @@ def listsforpandas(tocompareFinalAgentList, temp):
     #print(df)
 
 if __name__ == "__main__":
-    runs=0
     tempchange= [0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4, 0.4, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1.0, 1.0]
     #[
         #0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
@@ -319,13 +318,14 @@ if __name__ == "__main__":
         #0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 
         #0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 
         #1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    percentmovedall=[]
     percentmovedAvgList=[]
     tempchangeList2=[]
     mobstdevList2=[]
     finalpercentm=[]
     for temp in tempchange:
         for mobstdev in mobstdevList:
+            runs=0
+            percentmovedall=[]
             while runs<20:
                 suscmean=0.5
                 suscstdev=0.2
@@ -367,9 +367,9 @@ if __name__ == "__main__":
                 percentmoved=countnumbermovedbymovdiff/(len(tocompareFinalAgentList))
                 percentmovedall.append(percentmoved)
                 runs=runs+1
-    eachpercentmovedAvg = mean(percentmovedall)
-    percentmovedAvgList.append(eachpercentmovedAvg)
-    print(len(tocompareFinalAgentList))
+            eachpercentmovedAvg = mean(percentmovedall)
+            percentmovedAvgList.append(eachpercentmovedAvg)
+    #print(len(tocompareFinalAgentList))
     print(len(percentmovedall)) #len of percentmovedAvgList is the same bc tocompareFinalAgentList is only 400 long so all of these are all 400 long as well
     tempchangeList2 = [item for item in tempchange for i in range(100)]
     mobstdevList2 = [item for item in mobstdevList for i in range(100)]
@@ -384,7 +384,7 @@ if __name__ == "__main__":
     #{
     #"tempchange": tempchangeListFinal,
     #"mob standard dev (inequality)": mobstdevListFinal,
-    #"% moved": percentmovedAvgListFinal
+    #"% moved": percentmovedall
     #})
 
     #df.to_csv('Bhamini_PandasDataframe.csv')
