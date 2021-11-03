@@ -319,6 +319,11 @@ if __name__ == "__main__":
         #0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 
         #0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 
         #1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    percentmovedall=[]
+    percentmovedAvgList=[]
+    tempchangeList2=[]
+    mobstdevList2=[]
+    finalpercentm=[]
     for temp in tempchange:
         for mobstdev in mobstdevList:
             while runs<20:
@@ -326,11 +331,6 @@ if __name__ == "__main__":
                 suscstdev=0.2
                 mobmean=0.5
                 N=4
-                percentmovedall=[]
-                percentmovedAvgList=[]
-                tempchangeList2=[]
-                mobstdevList2=[]
-                finalpercentm=[]
                 AgentList = addInitialNodes(suscmean,suscstdev,mobmean,mobstdev,N)
                 AgentList = setInitialRegionAndClimate(AgentList)
                 ogAgentList = setOldMov(AgentList)
@@ -366,28 +366,28 @@ if __name__ == "__main__":
                 #print('% moved by diff bw region/climate:', percentmoved)
                 percentmoved=countnumbermovedbymovdiff/(len(tocompareFinalAgentList))
                 percentmovedall.append(percentmoved)
-                eachpercentmovedAvg = mean(percentmovedall)
-                percentmovedAvgList.append(eachpercentmovedAvg)
-            runs=runs+1
-        print(len(tocompareFinalAgentList))
-        print(len(percentmovedall)) #len of percentmovedAvgList is the same bc tocompareFinalAgentList is only 400 long so all of these are all 400 long as well
-        tempchangeList2 = [item for item in tempchange for i in range(100)]
-        mobstdevList2 = [item for item in mobstdevList for i in range(100)]
-        tempchangeListFinal = tempchangeList2
-        percentmovedAvgListFinal = percentmovedAvgList  
-        mobstdevListFinal = mobstdevList2
-        print(len(mobstdevListFinal))
-        print(len(tempchangeListFinal))
-        print(len(percentmovedAvgListFinal))
-        #newpercentmoved = [statistics.mean(percentmovedAvgListFinal[i:i + 100]) for i in range(0, len(percentmovedAvgListFinal), 100)]
-    df = pd.DataFrame(
-        {
-        "tempchange": tempchangeListFinal,
-        "mob standard dev (inequality)": mobstdevListFinal,
-        "% moved": percentmovedAvgListFinal
-        })
+                runs=runs+1
+    eachpercentmovedAvg = mean(percentmovedall)
+    percentmovedAvgList.append(eachpercentmovedAvg)
+    print(len(tocompareFinalAgentList))
+    print(len(percentmovedall)) #len of percentmovedAvgList is the same bc tocompareFinalAgentList is only 400 long so all of these are all 400 long as well
+    tempchangeList2 = [item for item in tempchange for i in range(100)]
+    mobstdevList2 = [item for item in mobstdevList for i in range(100)]
+    tempchangeListFinal = tempchangeList2
+    percentmovedAvgListFinal = percentmovedAvgList  
+    mobstdevListFinal = mobstdevList2
+    print(len(mobstdevListFinal))
+    print(len(tempchangeListFinal))
+    print(len(percentmovedAvgListFinal))
+    #newpercentmoved = [statistics.mean(percentmovedAvgListFinal[i:i + 100]) for i in range(0, len(percentmovedAvgListFinal), 100)]
+    #df = pd.DataFrame(
+    #{
+    #"tempchange": tempchangeListFinal,
+    #"mob standard dev (inequality)": mobstdevListFinal,
+    #"% moved": percentmovedAvgListFinal
+    #})
 
-    df.to_csv('Bhamini_PandasDataframe.csv')
+    #df.to_csv('Bhamini_PandasDataframe.csv')
 
     sys.exit()
     # or quit()x
